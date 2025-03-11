@@ -1,0 +1,21 @@
+package pages
+
+templ Login() {
+    @MainLayout("") {
+        <div class="container sep-top">
+            <div class="card">
+                <div class="card--header">Login</div>
+                <div class="card--body">
+                    <form method="POST">
+                        <div class="form--input">
+                            <label for="api_key">API Key</label>
+                            <input class="input" id="api_key" type="password" name="api_key" placeholder="Your API Key">
+                        </div>
+
+                        <button class="width-full sep-top">Login</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    }
+}

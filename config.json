@@ -1,0 +1,9 @@
+{
+  "users": {
+    "apikey": "Lion",
+    "apikey2": "Not Lion"
+  },
+  "sqlite": "./database.db",
+  "storage_path": "./store/",
+  "base_path": "http://localhost:8080/"
+}

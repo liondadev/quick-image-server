@@ -1,0 +1,170 @@
+/* Instrument Sans Font */
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Sans:ital,wght@0,400..700;1,400..700&display=swap');
+
+/* Theme And Styling */
+:root {
+    /* Main Themes */
+    --background: #1F2125;
+    --panel: #2e343f;
+    --inset-panel: #333e53;
+    --panel-shadow: rgba(0, 0, 0, 0.25);
+    --title: #FFFFFF;
+    --text: #cfcfcf;
+
+    /* 🤩 Pretty Colors 🤩 */
+    --accent: #8e44ad;
+    --accent-highlight: #9b59b6;
+    --success: #2ecc71;
+    --fail: #e74c3c;
+    --info: #3498db;
+
+    /* Numeric Stuff Stuff */
+    --text-size: 15px;
+    --base-padding: 1rem;
+    --corner-radius: 6px;
+}
+
+/* General Style Fixes */
+* {
+    box-sizing: border-box;
+
+    /* Apply fonts here so it affects buttons as well */
+    font-family: "Instrument Sans", sans-serif;
+    font-optical-sizing: auto;
+    font-weight: 400;
+    font-style: normal;
+    font-variation-settings:
+            "wdth" 100;
+}
+
+/* Custom Font Classes */
+.font-bold {
+    font-weight: 700;
+}
+
+.font-medium {
+    font-weight: 500;
+}
+
+/* Background Styles & Others */
+body {
+    color: white;
+
+    /* Apply the font here to affect normal styles like the text */
+    font-family: "Instrument Sans", sans-serif;
+    font-optical-sizing: auto;
+    font-weight: 400;
+    font-style: normal;
+    font-variation-settings:
+            "wdth" 100;
+
+    /* Epic Nerd Emoji Backdrop */
+    background-image: url("/assets/img/nerd_pattern_more_seethrough.png");
+    background-color: var(--background);
+    background-repeat: repeat;
+    background-size: 50px;
+
+    font-size: 15px;
+}
+
+.page {
+    position: absolute;
+    min-height: 100vh;
+    min-width: 100vw;
+}
+
+.card {
+    background: var(--background);
+    border-radius: var(--corner-radius);
+    overflow: hidden;
+    border: 1px solid var(--panel);
+    filter: drop-shadow(0 0 0.25rem var(--panel-shadow));
+
+    .card--header {
+        background: var(--panel);
+        padding: var(--base-padding);
+        font-size: 1.15rem;
+        font-weight: 500;
+
+        display: flex;
+        flex-direction: row;
+        gap: calc(var(--base-padding) / 2);
+    }
+
+    .card--body {
+        padding: var(--base-padding);
+    }
+}
+
+/*todo: responsiveness*/
+.container {
+    max-width: 75%;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+@media only screen and (max-width: 800px) {
+    .container {
+        max-width: 95%;
+    }
+}
+
+/* For when a page is the only thing on a container */
+.sep-top {
+    margin-top: var(--base-padding);
+}
+
+.footer-text {
+    margin-top: var(--base-padding);
+    opacity: 0.75;
+    font-size: 0.75rem;
+    text-align: center;
+}
+
+a {
+    text-decoration: none;
+    color: var(--accent);
+
+    &:hover {
+        text-decoration: underline;
+    }
+}
+
+
+.form--input {
+    display: flex;
+    flex-direction: row;
+    gap: var(--base-padding);
+    align-items: center;
+
+    label {
+        font-size: 1.05rem;
+        font-weight: 500;
+    }
+}
+
+.input {
+    border: 1px solid var(--inset-panel);
+    border-radius: var(--corner-radius);
+    background: var(--background);
+    padding: calc(var(--base-padding) / 2);
+
+    color: var(--text);
+    flex-grow: 1;
+
+    &:active {
+        outline: 1px solid var(--accent);
+    }
+}
+
+button {
+    padding: calc(var(--base-padding) / 2);
+    background: var(--accent);
+    color: var(--text);
+    border: 1px solid var(--accent-highlight);
+    border-radius: var(--corner-radius);
+}
+
+.width-full {
+    width: 100%;
+}

@@ -1,0 +1,12 @@
+package pages
+
+templ Error(time string, title string, message string) {
+    @MainLayout(time) {
+        <div class="container sep-top">
+            <div class="card">
+                <div class="card--header">{ title }</div>
+                <div class="card--body">{ message }</div>
+            </div>
+        </div>
+    }
+}

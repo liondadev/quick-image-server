@@ -1,0 +1,27 @@
+package pages
+
+templ MainLayout(dur string) {
+    <!doctype html>
+    <html lang="en">
+    <head>
+    <meta charset="UTF-8">
+         <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+         <meta http-equiv="X-UA-Compatible" content="ie=edge">
+         <title>Something Went Wrong!</title>
+
+         <link rel="stylesheet" href="/assets/css/reset.css" >
+         <link rel="stylesheet" href="/assets/css/main.css" >
+    </head>
+    <body>
+        { children... }
+
+        <div class="container sep-top">
+            <p class="footer-text">
+            if (dur != "") {
+            This request took {dur}. -
+            }
+            <a href="https://github.com/liondadev/quick-image-server">Quick Image Server</a></p>
+        </div>
+    </body>
+    </html>
+}
