@@ -1,15 +1,19 @@
 package pages
 
-templ Login() {
-    @MainLayout("") {
+templ Login(errText string) {
+    @MainLayout("Login", "") {
         <div class="container sep-top">
             <div class="card">
                 <div class="card--header">Login</div>
                 <div class="card--body">
+                    if (errText != "") {
+                        <div class="alert alert-fail sep-bottom">{ errText }</div>
+                    }
+
                     <form method="POST">
                         <div class="form--input">
                             <label for="api_key">API Key</label>
-                            <input class="input" id="api_key" type="password" name="api_key" placeholder="Your API Key">
+                            <input class="input" id="api_key" type="password" name="api_key" placeholder="Your API Key" required>
                         </div>
 
                         <button class="width-full sep-top">Login</button>

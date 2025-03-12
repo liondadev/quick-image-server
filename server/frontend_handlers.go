@@ -2,13 +2,15 @@ package server
 
 import (
 	"context"
+	"database/sql"
 	"errors"
-	"github.com/a-h/templ"
-	"github.com/liondadev/quick-image-server/server/pages"
 	"log"
 	"net/http"
 	"strconv"
 	"time"
+
+	"github.com/a-h/templ"
+	"github.com/liondadev/quick-image-server/server/pages"
 )
 
 // FrontendHandlerWithError is almost identical to HandlerWithError, but it handles
@@ -48,7 +50,7 @@ func writeHTML(w http.ResponseWriter, status int, html templ.Component) error {
 }
 
 func (s *Server) handleLoginPage(w http.ResponseWriter, r *http.Request) error {
-	return writeHTML(w, http.StatusOK, pages.Login())
+	return writeHTML(w, http.StatusOK, pages.Login(""))
 }
 
 func (s *Server) handlePostLoginPage(w http.ResponseWriter, r *http.Request) error {
@@ -57,5 +59,45 @@ func (s *Server) handlePostLoginPage(w http.ResponseWriter, r *http.Request) err
 		return err
 	}
 
+	apiKey := r.FormValue("api_key")
+	if apiKey == "" {
+		return writeHTML(w, http.StatusBadRequest, pages.Login("Please enter an API key."))
+	}
+
+	_, ok := s.cfg.Users[apiKey]
+	if !ok {
+		return writeHTML(w, http.StatusBadRequest, pages.Login("Invalid API Key."))
+	}
+
+	http.SetCookie(w, &http.Cookie{
+		Name:  "qis_api_key",
+		Value: apiKey,
+		Path:  "/",
+	})
+
+	http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
 	return nil
+}
+
+func (s *Server) handleDashboardPage(w http.ResponseWriter, r *http.Request) error {
+	userName, ok := r.Context().Value(AuthenticatedUserContextKey).(string)
+	if !ok {
+		panic("user in middleware but not in context key?")
+	}
+
+	// Collect some statistics
+	var totalUploads int = 0
+	if err := s.db.Get(&totalUploads, `SELECT COUNT(*) FROM "uploads" WHERE "user" = $1`, userName); err != nil && !errors.Is(err, sql.ErrNoRows) {
+		return err
+	}
+
+	var lastUpload int
+	if err := s.db.Get(&lastUpload, `SELECT "uploaded_at" FROM "uploads" WHERE "user" = $1 ORDER BY "uploaded_at" DESC LIMIT 1;`, userName); err != nil && !errors.Is(err, sql.ErrNoRows) {
+		return err
+	}
+
+	return writeHTML(w, http.StatusOK, pages.Dashboard(userName, map[string]string{
+		"Total Uploads": strconv.Itoa(totalUploads),
+		"Last Upload":   time.Unix(int64(lastUpload), 0).Format(time.RFC1123),
+	}))
 }

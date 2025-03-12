@@ -4,13 +4,14 @@ import (
 	"embed"
 	"errors"
 	"fmt"
+	"log"
+	"net/http"
+	"net/url"
+
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/jmoiron/sqlx"
 	"github.com/liondadev/quick-image-server/config"
-	"log"
-	"net/http"
-	"net/url"
 )
 
 //go:embed assets/*
@@ -78,6 +79,7 @@ func (s *Server) SetupHTTP() error {
 	mux.Use(middleware.RealIP)
 	mux.Use(middleware.Compress(5))
 	mux.Use(middleware.Recoverer)
+	mux.Use(middleware.CleanPath)
 
 	// API Routes
 	mux.With(s.preHandleAuthentication).With(s.preHandleRequireAuthentication).Handle("POST /upload", HandlerWithError(s.handleFileUpload))
@@ -87,6 +89,8 @@ func (s *Server) SetupHTTP() error {
 
 	// Frontend Routes
 	mux.Handle("GET /app/login", FrontendHandlerWithError(s.handleLoginPage))
+	mux.Handle("POST /app/login", FrontendHandlerWithError(s.handlePostLoginPage))
+	mux.With(s.preHandleAuthentication).With(s.preHandleRequireAuthentication).Handle("GET /app", FrontendHandlerWithError(s.handleDashboardPage))
 
 	// Redirects favicon to /assets/favicon.ico
 	mux.Handle("GET /favicon.ico", HandlerWithError(func(w http.ResponseWriter, r *http.Request) error {
@@ -104,7 +108,7 @@ func (s *Server) SetupHTTP() error {
 	mux.Mount("/assets/", httpFs)
 
 	// Not found handler
-	mux.NotFound(HandlerWithError(s.handleNotFound).ServeHTTP)
+	mux.NotFound(FrontendHandlerWithError(s.handleNotFound).ServeHTTP)
 
 	// Debug route logging
 	//var routes []string

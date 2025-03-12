@@ -51,7 +51,8 @@ func (s *Server) preHandleRequireAuthentication(next http.Handler) http.Handler 
 		}
 
 		if username == "" {
-			return PublicError{http.StatusUnauthorized, "This page requires authentication."}
+			http.Redirect(w, r, "/app/login", http.StatusTemporaryRedirect)
+			return nil
 		}
 
 		next.ServeHTTP(w, r)

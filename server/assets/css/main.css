@@ -14,9 +14,12 @@
     /* 🤩 Pretty Colors 🤩 */
     --accent: #8e44ad;
     --accent-highlight: #9b59b6;
-    --success: #2ecc71;
-    --fail: #e74c3c;
-    --info: #3498db;
+    --success: #27ae60;
+    --success-highlight: #2ecc71;
+    --fail: #c0392b;
+    --fail-highlight: #e74c3c;
+    --info: #2980b9;
+    --info-highlight: #3498db;
 
     /* Numeric Stuff Stuff */
     --text-size: 15px;
@@ -114,6 +117,31 @@ body {
     margin-top: var(--base-padding);
 }
 
+.sep-bottom {
+    margin-bottom: var(--base-padding);
+}
+
+/* Text */
+.text-title {
+    font-size: 1.5rem;
+    font-weight: 800;
+}
+
+/* Flex Util */
+.sep-middle {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+}
+
+/* Navbar Links */
+.nav-links {
+    display: flex;
+    flex-direction: row;
+    gap: var(--base-padding);
+}
+
 .footer-text {
     margin-top: var(--base-padding);
     opacity: 0.75;
@@ -163,8 +191,36 @@ button {
     color: var(--text);
     border: 1px solid var(--accent-highlight);
     border-radius: var(--corner-radius);
+
+    &:hover {
+        background: var(--accent-highlight);
+        cursor: pointer;
+    }
 }
 
 .width-full {
     width: 100%;
+}
+
+/* Aerts */
+.alert {
+    padding: var(--base-padding);
+    border: 1px solid var(--alert-borders);
+    background: var(--alert-background);
+    border-radius: var(--corner-radius);
+}
+
+.alert-info {
+    --alert-background: var(--info);
+    --alert-borders: var(--info-highlight);
+}
+
+.alert-success {
+    --alert-background: var(--success);
+    --alert-borders: var(--success-highlight);
+}
+
+.alert-fail {
+    --alert-background: var(--fail);
+    --alert-borders: var(--fail-highlight);
 }

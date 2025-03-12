@@ -1,6 +1,6 @@
 {
   "users": {
-    "apikey": "Lion",
+    "apikey": "Benton",
     "apikey2": "Not Lion"
   },
   "sqlite": "./database.db",
