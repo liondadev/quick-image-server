@@ -1,6 +1,8 @@
 package pages
 
-templ Dashboard(username string, stats map[string]string) {
+import "github.com/liondadev/quick-image-server/types"
+
+templ Dashboard(username string, stats map[string]string, uploads []types.Upload) {
     @MainLayout("Dashboard", "") {
         <div class="container sep-top">
             <div class="sep-middle">
@@ -24,7 +26,13 @@ templ Dashboard(username string, stats map[string]string) {
             </div>
             <div class="card sep-top">
                 <div class="card--header">Activity</div>
-                <div class="card--body">Uploads here</div>
+                <div class="card--body upload-grid">
+                    for _, up := range uploads {
+                        <div class="card">
+                            { up.Id }
+                        </div>
+                    }
+                </div>
             </div>
         </div>
     }

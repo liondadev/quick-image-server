@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"github.com/go-chi/chi/v5"
 	"io"
 	"log"
 	"net/http"
@@ -14,6 +13,8 @@ import (
 	"path/filepath"
 	"slices"
 	"time"
+
+	"github.com/go-chi/chi/v5"
 )
 
 const FileIdLength = 12
@@ -179,7 +180,7 @@ func (s *Server) handleThumbnailView(w http.ResponseWriter, r *http.Request) err
 			return err
 		}
 
-		http.Redirect(w, r, defaultThumbnailPath, http.StatusTemporaryRedirect)
+		http.Redirect(w, r, defaultThumbnailPath, http.StatusPermanentRedirect) // perma because it can never magically get a thumbnail.
 		return nil
 	}
 

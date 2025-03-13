@@ -11,6 +11,7 @@ import (
 
 	"github.com/a-h/templ"
 	"github.com/liondadev/quick-image-server/server/pages"
+	"github.com/liondadev/quick-image-server/types"
 )
 
 // FrontendHandlerWithError is almost identical to HandlerWithError, but it handles
@@ -87,17 +88,23 @@ func (s *Server) handleDashboardPage(w http.ResponseWriter, r *http.Request) err
 
 	// Collect some statistics
 	var totalUploads int = 0
+	var lastUpload uint64 = 0
 	if err := s.db.Get(&totalUploads, `SELECT COUNT(*) FROM "uploads" WHERE "user" = $1`, userName); err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return err
 	}
 
-	var lastUpload int
-	if err := s.db.Get(&lastUpload, `SELECT "uploaded_at" FROM "uploads" WHERE "user" = $1 ORDER BY "uploaded_at" DESC LIMIT 1;`, userName); err != nil && !errors.Is(err, sql.ErrNoRows) {
+	// Collect the recent uploads
+	uploads := make([]types.Upload, 10)
+	if err := s.db.Select(&uploads, `SELECT "id", "mime", "user", "uploaded_at", "uploaded_as", "ext" FROM "uploads" WHERE "user" = $1 ORDER BY "uploaded_at" DESC LIMIT 10;`, userName); err != nil {
 		return err
+	}
+
+	if len(uploads) >= 1 {
+		lastUpload = uploads[0].Timestamp
 	}
 
 	return writeHTML(w, http.StatusOK, pages.Dashboard(userName, map[string]string{
 		"Total Uploads": strconv.Itoa(totalUploads),
 		"Last Upload":   time.Unix(int64(lastUpload), 0).Format(time.RFC1123),
-	}))
+	}, uploads))
 }
