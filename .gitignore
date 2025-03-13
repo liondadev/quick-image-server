@@ -1,3 +1,4 @@
 tmp
 store
 *.db
+*_templ.go
