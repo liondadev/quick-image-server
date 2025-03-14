@@ -29,10 +29,9 @@ templ MainLayout(title string, dur string) {
             <div class="card--body">
                 <iframe id="upload-preview-modal-preview-container"></iframe>
                 <div class="card--buttons sep-top">
-                    <button>Open URL</button>
-                    <button>Copy URL</button>
-                    <button>Copy Thumbnail URL</button>
-                    <button>Delete</button>
+                    <a id="upload-preview-btn-open-url" class="button" target="_blank">Open URL</a>
+                    <a id="upload-preview-btn-open-thumb" class="button" target="_blank">Open Thumbnail</a>
+                    <a id="upload-preview-btn-delete">Delete</a>
                 </div>
             </div>
         </dialog>

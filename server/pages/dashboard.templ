@@ -2,12 +2,17 @@ package pages
 
 import "github.com/liondadev/quick-image-server/types"
 
+script openPreview(up types.Upload) {
+    showImagePreview(up., id, ext, mimeType, uploadedAt, deleteToken)
+}
+
 templ FileCard(up types.Upload) {
     <div class="card">
         <img src={"/thumb/"+up.Id+".png"} alt={"Thumbnail for "+up.UploadedAs} class="card--image">
         <div class="card--body">
             <a class="card--body--title" href={ templ.SafeURL("/f/"+up.Id+up.Extension) }>{ up.UploadedAs }</a>
             <p class="card--body--desc">{ up.Id } - { up.Extension }</p>
+            <button class="sep-top" onclick={ openPreview(up) }>Info</button>
         </div>
     </div>
 }
