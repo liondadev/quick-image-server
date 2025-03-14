@@ -227,6 +227,10 @@ button,.button {
     width: 100%;
 }
 
+.height-full {
+    height: 100%;
+}
+
 /* Aerts */
 .alert {
     padding: var(--base-padding);
@@ -248,6 +252,15 @@ button,.button {
 .alert-fail {
     --alert-background: var(--fail);
     --alert-borders: var(--fail-highlight);
+}
+
+.btn-danger {
+    background: var(--fail);
+    border: 1px solid var(--fail-highlight);
+
+    &:hover {
+        background: var(--fail-highlight);
+    }
 }
 
 .upload-grid {
@@ -277,4 +290,8 @@ button,.button {
 ::backdrop {
     color: var(--background-backdrop);
     backdrop-filter: blur(3px);
+}
+
+#upload-preview-close-button {
+    cursor: pointer;
 }

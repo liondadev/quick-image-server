@@ -3,7 +3,7 @@ package pages
 import "github.com/liondadev/quick-image-server/types"
 
 script openPreview(up types.Upload) {
-    showImagePreview(up., id, ext, mimeType, uploadedAt, deleteToken)
+    showImagePreview(up.UploadedAs + " » " + up.id + up.Extension, up.Id, up.Extension, up.MimeType, up.Timestamp, up.DeleteToken)
 }
 
 templ FileCard(up types.Upload) {

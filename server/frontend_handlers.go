@@ -95,7 +95,7 @@ func (s *Server) handleDashboardPage(w http.ResponseWriter, r *http.Request) err
 
 	// Collect the recent uploads
 	uploads := make([]types.Upload, 16)
-	if err := s.db.Select(&uploads, `SELECT "id", "mime", "user", "uploaded_at", "uploaded_as", "ext" FROM "uploads" WHERE "user" = $1 ORDER BY "uploaded_at" DESC LIMIT 16;`, userName); err != nil {
+	if err := s.db.Select(&uploads, `SELECT "id", "mime", "user", "uploaded_at", "uploaded_as", "ext", "delete_token" FROM "uploads" WHERE "user" = $1 ORDER BY "uploaded_at" DESC LIMIT 16;`, userName); err != nil {
 		return err
 	}
 

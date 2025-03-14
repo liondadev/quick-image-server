@@ -28,7 +28,15 @@ let openThumbButton;
  */
 let deleteButton;
 
-const toaster = new Notyf({dismissible: true, duration: 2000});
+/**
+ * @type {HTMLImageElement}
+ */
+let closeModalButton;
+
+/**
+ * @type {((event: Event) => void) | undefined}
+ */
+let lastDeleteHandler;
 
 /**
  * Shows the popup modal for an image preview.
@@ -47,6 +55,7 @@ function showImagePreview(name, id, ext, mimeType, uploadedAt, deleteToken) {
     if (!openUrlButton) return false;
     if (!openThumbButton) return false;
     if (!deleteButton) return false;
+
     const targetUrl = "/f/"+id+ext;
     const deleteUrl = "/delete/"+id+"/"+deleteToken;
 
@@ -54,13 +63,34 @@ function showImagePreview(name, id, ext, mimeType, uploadedAt, deleteToken) {
     previewContainer.src = targetUrl;
 
     openUrlButton.href = targetUrl;
-    deleteButton.href = deleteToken;
     openThumbButton.href = "/thumb/"+id+".png"
+
+    // Remove old event handler so we don't delete old files.
+    if (lastDeleteHandler)
+        deleteButton.removeEventListener("click", lastDeleteHandler);
+
+    // Set the new event handler.
+    lastDeleteHandler = async (event) => {
+        const shouldDelete = confirm(`Are you sure you want to PERMANENTLY delete ${name}?`);
+        if (!shouldDelete) return;
+
+        const status = await fetch(deleteUrl).then((r) => r.status).catch((err) => {
+            alert("Failed to delete the file. Please check your JS console.")
+            console.error(err)
+        })
+        if (!status) return; // caught error
+        if (status !== 200)
+            alert("Failed to delete the file. Received non-200 error code.");
+
+        window.location = window.location; // refresh page
+    }
+    deleteButton.addEventListener("click", lastDeleteHandler)
 
     popupElement.showModal();
     return true;
 }
 
+// Set the vars to what we expect...
 window.onload = function() {
     popupElement = document.getElementById("upload-preview-modal");
     titleElement = document.getElementById("upload-preview-modal-title");
@@ -68,7 +98,9 @@ window.onload = function() {
     openUrlButton = document.getElementById("upload-preview-btn-open-url");
     openThumbButton = document.getElementById("upload-preview-btn-open-thumb");
     deleteButton = document.getElementById("upload-preview-btn-delete");
+    closeModalButton = document.getElementById("upload-preview-close-button")
 
-    // const res = showImagePreview("Amazing Image!", "WfLFgTapmfUa", ".png", "image/png", 1741908775);
-    console.log(res);
+    closeModalButton.addEventListener("click", () => {
+        if (popupElement.open) popupElement.close();
+    })
 }
