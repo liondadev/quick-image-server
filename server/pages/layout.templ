@@ -11,6 +11,7 @@ templ MainLayout(title string, dur string) {
 
          <link rel="stylesheet" href="/assets/css/reset.css" >
          <link rel="stylesheet" href="/assets/css/main.css" >
+         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.css">
     </head>
     <body>
         { children... }
@@ -22,6 +23,22 @@ templ MainLayout(title string, dur string) {
             }
             <a href="https://github.com/liondadev/quick-image-server">Quick Image Server</a></p>
         </div>
+
+        <dialog id="upload-preview-modal" class="modal card">
+            <div class="card--header card--header-withclose"><span id="upload-preview-modal-title"></span><img class="close-button" src="/assets/icons/xmark_solid.svg" alt="Close Icon"></div>
+            <div class="card--body">
+                <iframe id="upload-preview-modal-preview-container"></iframe>
+                <div class="card--buttons sep-top">
+                    <button>Open URL</button>
+                    <button>Copy URL</button>
+                    <button>Copy Thumbnail URL</button>
+                    <button>Delete</button>
+                </div>
+            </div>
+        </dialog>
+
+        <script src="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.js"></script>
+        <script src="/assets/js/preview.js" defer></script>
     </body>
     </html>
 }

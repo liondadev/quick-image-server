@@ -5,6 +5,7 @@
 :root {
     /* Main Themes */
     --background: #1F2125;
+    --background-backdrop: rgba(31, 33, 37, 0.25);
     --panel: #2e343f;
     --inset-panel: #333e53;
     --panel-shadow: rgba(0, 0, 0, 0.25);
@@ -91,11 +92,34 @@ body {
 
         display: flex;
         flex-direction: row;
-        gap: calc(var(--base-padding) / 2);
+        align-items: center;
+        justify-content: space-between;
+
+        .close-button {
+            width: 1.5rem;
+        }
     }
 
     .card--body {
         padding: var(--base-padding);
+
+        .card--body--title {
+            font-size: 1.15rem;
+            font-weight: 500;
+            margin-bottom: calc(var(--base-padding) / 4) !important;
+            display: block;
+        }
+
+        .card--body--desc {
+            opacity: 0.75;
+        }
+    }
+
+    .card--image {
+        width: 100%;
+        background: var(--inset-panel);
+        margin: 0;
+        padding: 0;
     }
 }
 
@@ -144,6 +168,7 @@ body {
 
 .footer-text {
     margin-top: var(--base-padding);
+    margin-bottom: var(--base-padding);
     opacity: 0.75;
     font-size: 0.75rem;
     text-align: center;
@@ -229,4 +254,27 @@ button {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: var(--base-padding);
+}
+
+/* Modal / Preview Image */
+.modal {
+    padding: 0;
+    color: inherit;
+
+    outline: none !important;
+
+    max-width: 95vw;
+}
+
+#upload-preview-modal-preview-container {
+    width: 75vw;
+    aspect-ratio: 16/9;
+    background: var(--inset-panel);
+    border-radius: var(--corner-radius);
+    overflow: hidden;
+}
+
+::backdrop {
+    color: var(--background-backdrop);
+    backdrop-filter: blur(3px);
 }

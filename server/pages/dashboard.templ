@@ -2,6 +2,16 @@ package pages
 
 import "github.com/liondadev/quick-image-server/types"
 
+templ FileCard(up types.Upload) {
+    <div class="card">
+        <img src={"/thumb/"+up.Id+".png"} alt={"Thumbnail for "+up.UploadedAs} class="card--image">
+        <div class="card--body">
+            <a class="card--body--title" href={ templ.SafeURL("/f/"+up.Id+up.Extension) }>{ up.UploadedAs }</a>
+            <p class="card--body--desc">{ up.Id } - { up.Extension }</p>
+        </div>
+    </div>
+}
+
 templ Dashboard(username string, stats map[string]string, uploads []types.Upload) {
     @MainLayout("Dashboard", "") {
         <div class="container sep-top">
@@ -28,9 +38,7 @@ templ Dashboard(username string, stats map[string]string, uploads []types.Upload
                 <div class="card--header">Activity</div>
                 <div class="card--body upload-grid">
                     for _, up := range uploads {
-                        <div class="card">
-                            { up.Id }
-                        </div>
+                        @FileCard(up)
                     }
                 </div>
             </div>
