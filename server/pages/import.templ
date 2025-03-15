@@ -1,0 +1,35 @@
+package pages
+
+templ Import(username string) {
+    @MainLayout("Import", "") {
+        <div class="container sep-top">
+            <div class="sep-middle">
+                <h1 class="text-title">Hello, { username }</h1>
+                <div class="nav-links">
+                    <a href="/app/uploads">Uploads</a>
+                    <span>•</span>
+                    <a href="/app/exports">Exports</a>
+                    <span>•</span>
+                    <a href="/app/logout">Log Out</a>
+                </div>
+            </div>
+
+            <div class="card sep-top">
+                <div class="card--header">Import Console</div>
+                <div class="card--body">
+                    <div id="import-console">
+                        <pre>Enter the name of the database file to import below.</pre>
+                        <pre>All imports will be done under your name.</pre>
+                    </div>
+
+                    <input type="text" id="import-entry" class="sep-top input width-full" placeholder="Name of the file to import">
+                    <button class="sep-top width-full" id="import-button">DO THE IMPORT!!!!!!!!!!</button>
+                </div>
+            </div>
+            
+            <link rel="stylesheet" href="/assets/css/import.css" >
+        </div>
+        
+        <script src="/assets/js/import.js"></script>
+    }
+}

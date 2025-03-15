@@ -138,3 +138,12 @@ func (s *Server) handleUploadsPage(w http.ResponseWriter, r *http.Request) error
 
 	return writeHTML(w, http.StatusOK, pages.Uploads(userName, uploads, query, pageNum))
 }
+
+func (s *Server) handleImportPage(w http.ResponseWriter, r *http.Request) error {
+	userName, ok := r.Context().Value(AuthenticatedUserContextKey).(string)
+	if !ok {
+		panic("user in middleware but not in context key?")
+	}
+
+	return writeHTML(w, http.StatusOK, pages.Import(userName))
+}

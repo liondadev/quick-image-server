@@ -1,0 +1,22 @@
+#import-console {
+    background: var(--panel-dark);
+    padding: var(--base-padding);
+    border-radius: var(--corner-radius);
+    font-family: monospace;
+    font-size: 1.15rem;
+
+    height: 15rem;
+    overflow-y: scroll;
+
+    .info {
+        color: var(--info);
+    }
+
+    .success {
+        color: var(--success);
+    }
+
+    .fail {
+        color: var(--fail);
+    }
+}

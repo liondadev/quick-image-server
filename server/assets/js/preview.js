@@ -103,4 +103,6 @@ window.onload = function() {
     closeModalButton.addEventListener("click", () => {
         if (popupElement.open) popupElement.close();
     })
+
+    if (window.extraload) window.extraload();
 }

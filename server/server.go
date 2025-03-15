@@ -83,6 +83,7 @@ func (s *Server) SetupHTTP() error {
 
 	// API Routes
 	mux.With(s.preHandleAuthentication).With(s.preHandleRequireAuthentication).Handle("POST /upload", HandlerWithError(s.handleFileUpload))
+	mux.With(s.preHandleAuthentication).Handle("GET /import-api", http.HandlerFunc(s.handleRunImport))
 	mux.Handle("GET /f/{file}", FrontendHandlerWithError(s.handleFileView))
 	mux.Handle("GET /thumb/{file}", FrontendHandlerWithError(s.handleThumbnailView))
 	mux.Handle("GET /delete/{fileId}/{deleteToken}", HandlerWithError(s.handleDeleteFile))
@@ -92,6 +93,7 @@ func (s *Server) SetupHTTP() error {
 	mux.Handle("POST /app/login", FrontendHandlerWithError(s.handlePostLoginPage))
 	mux.With(s.preHandleAuthentication).With(s.preHandleRequireAuthentication).Handle("GET /app", FrontendHandlerWithError(s.handleDashboardPage))
 	mux.With(s.preHandleAuthentication).With(s.preHandleRequireAuthentication).Handle("GET /app/uploads", FrontendHandlerWithError(s.handleUploadsPage))
+	mux.With(s.preHandleAuthentication).With(s.preHandleRequireAuthentication).Handle("GET /app/import", FrontendHandlerWithError(s.handleImportPage))
 
 	// Redirects favicon to /assets/favicon.ico
 	mux.Handle("GET /favicon.ico", HandlerWithError(func(w http.ResponseWriter, r *http.Request) error {
@@ -137,7 +139,7 @@ func (s *Server) Run(addr string) error {
 // ApplyMigrations creates all the SQL tables and stuff needed for the service to work.
 func (s *Server) ApplyMigrations() error {
 	// 001 - create database
-	stmt := `CREATE TABLE IF NOT EXISTS "uploads" ("id" TEXT, "mime" TEXT, "user" TEXT, "uploaded_at" INTEGER, "uploaded_as" TEXT, "delete_token" TEXT, "ext" TEXT)`
+	stmt := `CREATE TABLE IF NOT EXISTS "uploads" ("id" TEXT PRIMARY KEY, "mime" TEXT, "user" TEXT, "uploaded_at" INTEGER, "uploaded_as" TEXT, "delete_token" TEXT, "ext" TEXT)`
 	if _, err := s.db.Exec(stmt); err != nil {
 		return fmt.Errorf("create initial schema: %w", err)
 	}

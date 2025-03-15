@@ -5,5 +5,7 @@
   },
   "sqlite": "./database.db",
   "storage_path": "./store/",
-  "base_path": "http://localhost:8080/"
+  "base_path": "http://localhost:8080/",
+  "allowed_to_import": ["lionlionlionlion"],
+  "base_import_path": "./imports"
 }

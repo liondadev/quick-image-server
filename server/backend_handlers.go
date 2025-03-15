@@ -2,8 +2,10 @@ package server
 
 import (
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/jmoiron/sqlx"
 	"io"
 	"log"
 	"net/http"
@@ -12,6 +14,7 @@ import (
 	"path"
 	"path/filepath"
 	"slices"
+	"strconv"
 	"time"
 
 	"github.com/go-chi/chi/v5"
@@ -245,4 +248,161 @@ func (s *Server) handleDeleteFile(w http.ResponseWriter, r *http.Request) error 
 
 func setCacheControlHeaders(w http.ResponseWriter) {
 	w.Header().Set("Cache-Control", "public, max-age=1800") // 30 min cache time
+}
+
+func (s *Server) handleRunImport(w http.ResponseWriter, r *http.Request) {
+	userName, ok := r.Context().Value(AuthenticatedUserContextKey).(string)
+	if !ok {
+		panic("user in middleware but not in context key?")
+	}
+
+	_ = userName
+
+	w.Header().Set("Content-Type", "text/event-stream")
+	w.Header().Set("Cache-Control", "no-cache")
+	w.WriteHeader(http.StatusOK)
+
+	wf, ok := w.(http.Flusher)
+	if !ok {
+		panic("Handler is not a flusher.")
+	}
+
+	writeMessage := func(name string, content []byte) error {
+		message := "event: " + name + "\n"
+		message = message + "data: "
+		messageBytes := append([]byte(message), content...)
+		messageBytes = append(messageBytes, '\n', '\n')
+
+		_, err := w.Write(messageBytes)
+		if err != nil {
+			return err
+		}
+
+		wf.Flush()
+		return nil
+	}
+
+	typeSuccess := "success"
+	typeInfo := "info"
+	typeFail := "fail"
+	_ = typeSuccess
+
+	writeNormalMessage := func(t string, msg string) error {
+		data := map[string]string{
+			"type":    t,
+			"content": msg,
+		}
+
+		jsb, err := json.Marshal(data)
+		if err != nil {
+			return err
+		}
+
+		return writeMessage("message", jsb)
+	}
+
+	fileName := r.URL.Query().Get("fileName")
+	if fileName == "" {
+		_ = writeNormalMessage(typeFail, "No file name provided.")
+		return
+	}
+
+	_ = writeNormalMessage(typeInfo, "Checking for file "+fileName+".")
+
+	fullPath := path.Join(s.cfg.BaseImportPath, fileName)
+	_ = writeNormalMessage(typeInfo, "Full path to check: "+fullPath)
+
+	if _, err := os.Stat(fullPath); err != nil {
+		_ = writeNormalMessage(typeFail, "File does not exist on disk.")
+		return
+	}
+
+	db, err := sqlx.Open("sqlite", fullPath)
+	if err != nil {
+		_ = writeNormalMessage(typeFail, "Failed to open SQLite database connection: "+err.Error())
+		return
+	}
+
+	type LegacyUpload struct {
+		Id          string `db:"id"`
+		Extension   string `db:"ext"`
+		DataBlob    []byte `db:"blob"`
+		UploadedAs  string `db:"original_filename"`
+		DeleteToken string `db:"delete_token"`
+	}
+	perPage := 25
+	curPage := 1
+
+	// go through all the pages
+	for curPage <= 1000 {
+		var uploads []LegacyUpload
+		offset := (curPage - 1) * perPage
+		if err := db.Select(&uploads, `SELECT "id", "ext", "blob", "original_filename", "delete_token" FROM "files" ORDER BY "id" LIMIT $1 OFFSET $2`, perPage, offset); err != nil {
+			_ = writeNormalMessage(typeFail, "Failed to get files from pagination: "+err.Error())
+			break
+		}
+
+		_ = writeNormalMessage(typeInfo, "Handling paginated page "+strconv.Itoa(curPage)+" ("+strconv.Itoa(len(uploads))+")")
+		for _, up := range uploads {
+			_ = writeNormalMessage(typeInfo, "Handling file with ID: "+up.Id)
+
+			fullPath := path.Join(s.cfg.FSPath, up.Id+up.Extension)
+
+			if _, err := os.Stat(fullPath); err == nil {
+				_ = writeNormalMessage(typeInfo, "Skipping "+up.Id+" because a file already exists on our FS.")
+				continue
+			}
+
+			var mimeType string = "text/plain"
+			switch up.Extension {
+			case ".png":
+				mimeType = "image/png"
+			case ".jpg", ".jpeg":
+				mimeType = "image/jpeg"
+			case ".gif":
+				mimeType = "image/gif"
+			case ".txt":
+				mimeType = "text/plain"
+			case ".bin":
+				mimeType = "application/octet-stream"
+			case ".mp4":
+				mimeType = "video/mp4"
+			case ".html":
+				mimeType = "application/html"
+			case ".md":
+				mimeType = "text/markdown"
+			case ".xlsx":
+				mimeType = " application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+			}
+
+			// insert into THE REAL db
+			if _, err := s.db.Exec(`INSERT INTO "uploads" ("id", "mime", "user", "uploaded_at", "uploaded_as", "delete_token", "ext") VALUES ($1, $2, $3, $4, $5, $6, $7)`, up.Id, mimeType, userName, time.Now().Unix(), up.UploadedAs, up.DeleteToken, up.Extension); err != nil {
+				_ = writeNormalMessage(typeFail, "Failed to insert file "+up.Id+" into the database: "+err.Error())
+				continue
+			}
+
+			// store on the file system
+			f, err := os.Create(fullPath)
+			if err != nil {
+				_ = writeNormalMessage(typeFail, "Failed to create disk file "+up.Id+": "+err.Error())
+				continue
+			}
+
+			_, err = f.Write(up.DataBlob)
+			if err != nil {
+				_ = writeNormalMessage(typeFail, "Failed to write to file with id "+up.Id+": "+err.Error())
+			}
+
+			f.Close()
+		}
+
+		if len(uploads) < perPage {
+			_ = writeNormalMessage(typeInfo, "Reached end of pagination.")
+			break
+		}
+
+		curPage++
+	}
+
+	_ = writeNormalMessage(typeSuccess, "Done!")
 }

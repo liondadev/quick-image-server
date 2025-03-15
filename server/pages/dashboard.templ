@@ -8,7 +8,7 @@ script openPreview(up types.Upload) {
 
 templ FileCard(up types.Upload) {
     <div class="card">
-        <img src={"/thumb/"+up.Id+".png"} alt={"Thumbnail for "+up.UploadedAs} class="card--image">
+        <img src={"/thumb/"+up.Id+up.Extension} alt={"Thumbnail for "+up.UploadedAs} class="card--image">
         <div class="card--body">
             <a class="card--body--title" href={ templ.SafeURL("/f/"+up.Id+up.Extension) }>{ up.UploadedAs }</a>
             <p class="card--body--desc">{ up.Id } | { up.Extension }</p>
