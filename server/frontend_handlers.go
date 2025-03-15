@@ -108,3 +108,33 @@ func (s *Server) handleDashboardPage(w http.ResponseWriter, r *http.Request) err
 		"Last Upload":   time.Unix(int64(lastUpload), 0).Format(time.RFC1123),
 	}, uploads))
 }
+
+func (s *Server) handleUploadsPage(w http.ResponseWriter, r *http.Request) error {
+	userName, ok := r.Context().Value(AuthenticatedUserContextKey).(string)
+	if !ok {
+		panic("user in middleware but not in context key?")
+	}
+
+	pageNum := 1
+	q := r.URL.Query()
+	query := q.Get("search")
+	pageStr := q.Get("page")
+
+	if pn, err := strconv.Atoi(pageStr); err == nil && pn >= 1 {
+		pageNum = pn
+	}
+
+	uploads := make([]types.Upload, 4*10)
+	if query != "" {
+		// This query is more expensive, even if we escape things properly.
+		if err := s.db.Select(&uploads, `SELECT "id", "mime", "user", "uploaded_at", "uploaded_as", "ext", "delete_token" FROM "uploads" WHERE "user" = $1 AND ("id" LIKE '%' || $2 || '%' OR "uploaded_as" LIKE '%' || $2 || '%' OR "mime" = $2 OR "ext" LIKE '%' || $2 || '%') ORDER BY "uploaded_at" DESC LIMIT 40 OFFSET $3;`, userName, query, (pageNum-1)*40); err != nil {
+			return err
+		}
+	} else {
+		if err := s.db.Select(&uploads, `SELECT "id", "mime", "user", "uploaded_at", "uploaded_as", "ext", "delete_token" FROM "uploads" WHERE "user" = $1 ORDER BY "uploaded_at" DESC LIMIT 40 OFFSET $2;`, userName, (pageNum-1)*40); err != nil {
+			return err
+		}
+	}
+
+	return writeHTML(w, http.StatusOK, pages.Uploads(userName, uploads, query, pageNum))
+}

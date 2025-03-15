@@ -264,9 +264,23 @@ button,.button {
 }
 
 .upload-grid {
+    --cols: 4;
+
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(var(--cols), 1fr);
     gap: var(--base-padding);
+}
+
+@media only screen and (max-width: 1200px) {
+    .upload-grid {
+        --cols: 2;
+    }
+}
+
+@media only screen and (max-width: 700px) {
+    .upload-grid {
+        --cols: 1;
+    }
 }
 
 /* Modal / Preview Image */

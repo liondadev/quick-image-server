@@ -1,0 +1,58 @@
+package pages
+
+import "strconv"
+import "github.com/liondadev/quick-image-server/types"
+import "math"
+import "fmt"
+
+templ Uploads(username string, uploads []types.Upload, curSearch string, curPage int) {
+    @MainLayout("Dashboard", "") {
+        <div class="container sep-top">
+            <div class="sep-middle">
+                <h1 class="text-title">Hello, { username }</h1>
+                <div class="nav-links">
+                    <a href="/app/uploads">Uploads</a>
+                    <span>•</span>
+                    <a href="/app/exports">Exports</a>
+                    <span>•</span>
+                    <a href="/app/logout">Log Out</a>
+                </div>
+            </div>
+
+            <div class="sep-middle sep-top">
+                <h2>{ strconv.Itoa(len(uploads)) } results</h2>
+                <form method="GET">
+                    <input class="input" type="text" name="search" placeholder="Search..." value={ curSearch }>
+                </form>
+            </div>
+
+            <div class="upload-grid sep-top">
+                for _, up := range uploads {
+                    @FileCard(up)
+                }
+            </div>
+
+           <div class="sep-top right-thing">
+                <form method="GET">
+                    <input type="hidden" name="search" value={ curSearch } >
+                    <input type="hidden" name="page" value={ fmt.Sprintf("%d", int(math.Max(float64(curPage - 1), 1))) } >
+                    <button>Prev. Page</button>
+                </form>
+                <form method="GET">
+                    <input type="hidden" name="search" value={ curSearch } >
+                    <input type="hidden" name="page" value={ strconv.Itoa(curPage + 1) } >
+                    <button>Next Page</button>
+                </form>
+           </div>
+        </div>
+
+        <style>
+            .right-thing {
+                display: flex;
+                justify-content: flex-end;
+                align-items: center;
+                gap: var(--base-padding);
+            }
+        </style>
+    }
+}

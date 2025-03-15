@@ -11,7 +11,7 @@ templ FileCard(up types.Upload) {
         <img src={"/thumb/"+up.Id+".png"} alt={"Thumbnail for "+up.UploadedAs} class="card--image">
         <div class="card--body">
             <a class="card--body--title" href={ templ.SafeURL("/f/"+up.Id+up.Extension) }>{ up.UploadedAs }</a>
-            <p class="card--body--desc">{ up.Id } - { up.Extension }</p>
+            <p class="card--body--desc">{ up.Id } | { up.Extension }</p>
             <button class="sep-top" onclick={ openPreview(up) }>Info</button>
         </div>
     </div>
@@ -54,7 +54,7 @@ templ Dashboard(username string, stats map[string]string, uploads []types.Upload
         .stats-list{
             display: grid;
             gap: var(--base-padding);
-            grid-template-columns: 1fr 1fr 1fr;
+            grid-template-columns: 1fr 1fr;
         }
     </style>
 }

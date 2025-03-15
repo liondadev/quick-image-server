@@ -91,6 +91,7 @@ func (s *Server) SetupHTTP() error {
 	mux.Handle("GET /app/login", FrontendHandlerWithError(s.handleLoginPage))
 	mux.Handle("POST /app/login", FrontendHandlerWithError(s.handlePostLoginPage))
 	mux.With(s.preHandleAuthentication).With(s.preHandleRequireAuthentication).Handle("GET /app", FrontendHandlerWithError(s.handleDashboardPage))
+	mux.With(s.preHandleAuthentication).With(s.preHandleRequireAuthentication).Handle("GET /app/uploads", FrontendHandlerWithError(s.handleUploadsPage))
 
 	// Redirects favicon to /assets/favicon.ico
 	mux.Handle("GET /favicon.ico", HandlerWithError(func(w http.ResponseWriter, r *http.Request) error {
