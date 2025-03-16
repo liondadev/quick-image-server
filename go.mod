@@ -5,6 +5,7 @@ go 1.23.4
 require (
 	github.com/a-h/templ v0.3.833 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
+	github.com/ericpauley/go-quantize v0.0.0-20200331213906-ae555eb2afa4 // indirect
 	github.com/glebarez/go-sqlite v1.22.0 // indirect
 	github.com/go-chi/chi/v5 v5.2.1 // indirect
 	github.com/google/uuid v1.5.0 // indirect

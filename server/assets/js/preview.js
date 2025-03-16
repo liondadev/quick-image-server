@@ -39,6 +39,16 @@ let closeModalButton;
 let lastDeleteHandler;
 
 /**
+ * @type {HTMLAnchorElement}
+ */
+let bubbledPngButton;
+
+/**
+ * @type {HTMLAnchorElement}
+ */
+let bubbledGifButton;
+
+/**
  * Shows the popup modal for an image preview.
  * @param {string} name
  * @param {string} id
@@ -64,6 +74,8 @@ function showImagePreview(name, id, ext, mimeType, uploadedAt, deleteToken) {
 
     openUrlButton.href = targetUrl;
     openThumbButton.href = "/thumb/"+id+".png"
+    bubbledPngButton.href = "/bubble/"+id+".png"
+    bubbledGifButton.href = "/bubble/"+id+".gif"
 
     // Remove old event handler so we don't delete old files.
     if (lastDeleteHandler)
@@ -99,6 +111,8 @@ window.onload = function() {
     openThumbButton = document.getElementById("upload-preview-btn-open-thumb");
     deleteButton = document.getElementById("upload-preview-btn-delete");
     closeModalButton = document.getElementById("upload-preview-close-button")
+    bubbledPngButton = document.getElementById("upload-preview-btn-open-bubbled-png");
+    bubbledGifButton = document.getElementById("upload-preview-btn-open-bubbled-gif");
 
     closeModalButton.addEventListener("click", () => {
         if (popupElement.open) popupElement.close();

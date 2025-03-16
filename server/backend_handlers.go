@@ -1,11 +1,15 @@
 package server
 
 import (
+	"bytes"
 	"database/sql"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/jmoiron/sqlx"
+	"github.com/liondadev/quick-image-server/types"
+	"image/jpeg"
+	"image/png"
 	"io"
 	"log"
 	"net/http"
@@ -147,6 +151,90 @@ func (s *Server) handleFileView(w http.ResponseWriter, r *http.Request) error {
 	return nil
 }
 
+func (s *Server) handleBubbleView(w http.ResponseWriter, r *http.Request) error {
+	requestedFilename, fileId := getFileDetails(r)
+	ext := path.Ext(requestedFilename)
+	if ext != ".gif" && ext != ".png" && ext != ".jpg" && ext != ".jpeg" {
+		return PublicError{http.StatusBadRequest, "Bubble images can only be generated into GIFs or PNGs."}
+	}
+
+	diskPath := path.Join(s.cfg.FSPath, fileId+".bubble"+ext)
+
+	var upload types.Upload
+	if err := s.db.Get(&upload, `SELECT * FROM "uploads" WHERE "id" = $1`, fileId); err != nil {
+		return PublicError{http.StatusNotFound, "File not found."}
+	}
+
+	if f, err := os.Open(diskPath); err == nil {
+		defer f.Close()
+
+		w.Header().Set("Content-Type", upload.MimeType)
+		w.WriteHeader(http.StatusOK)
+		if _, err = io.Copy(w, f); err != nil {
+			return err
+		}
+		return nil
+	}
+
+	if upload.MimeType != "image/png" && upload.MimeType != "image/jpeg" {
+		return PublicError{http.StatusBadRequest, "The original asset must be either a PNG or GIF."}
+	}
+
+	f, err := os.Open(path.Join(s.cfg.FSPath, fileId+upload.Extension))
+	if err != nil {
+		return nil
+	}
+	defer f.Close()
+
+	bubbled, err := s.MakeBubbleImage(upload.MimeType, f)
+	if err != nil {
+		return err
+	}
+
+	enc := new(bytes.Buffer)
+	switch ext {
+	case ".png":
+		if err := png.Encode(enc, bubbled); err != nil {
+			return err
+		}
+	case ".jpg", ".jpeg":
+		if err := jpeg.Encode(enc, bubbled, &jpeg.Options{Quality: 100}); err != nil {
+			return err
+		}
+	case ".gif":
+		buff, err := s.ImageToGif(bubbled)
+		if err != nil {
+			return err
+		}
+		if _, err := io.Copy(enc, buff); err != nil {
+			return err
+		}
+	}
+
+	nf, err := os.Create(diskPath)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	if _, err := io.Copy(nf, enc); err != nil {
+		return err
+	}
+
+	if f, err := os.Open(diskPath); err == nil {
+		defer f.Close()
+
+		w.Header().Set("Content-Type", upload.MimeType)
+		w.WriteHeader(http.StatusOK)
+		if _, err = io.Copy(w, f); err != nil {
+			return err
+		}
+		return nil
+	}
+
+	return nil
+}
+
 // handleThumbnailView handles people viewing the thumbnail images of files. The thumbnails are
 // always 480x270, and pngs.
 func (s *Server) handleThumbnailView(w http.ResponseWriter, r *http.Request) error {
@@ -187,13 +275,13 @@ func (s *Server) handleThumbnailView(w http.ResponseWriter, r *http.Request) err
 		return nil
 	}
 
-	origFIle, err := os.Open(originalDiskPath)
+	origFile, err := os.Open(originalDiskPath)
 	if err != nil {
 		return err
 	}
-	defer origFIle.Close()
+	defer origFile.Close()
 
-	thumb, err := s.MakeThumbnail(mimeType, origFIle)
+	thumb, err := s.MakeThumbnail(mimeType, origFile)
 	if err != nil {
 		return err
 	}
@@ -373,6 +461,10 @@ func (s *Server) handleRunImport(w http.ResponseWriter, r *http.Request) {
 				mimeType = "text/markdown"
 			case ".xlsx":
 				mimeType = " application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+			case ".zip":
+				mimeType = "application/zip"
+			case ".pdf":
+				mimeType = "application/pdf"
 			}
 
 			// insert into THE REAL db

@@ -85,10 +85,12 @@ func (s *Server) SetupHTTP() error {
 	mux.With(s.preHandleAuthentication).With(s.preHandleRequireAuthentication).Handle("POST /upload", HandlerWithError(s.handleFileUpload))
 	mux.With(s.preHandleAuthentication).Handle("GET /import-api", http.HandlerFunc(s.handleRunImport))
 	mux.Handle("GET /f/{file}", FrontendHandlerWithError(s.handleFileView))
+	mux.Handle("GET /bubble/{file}", FrontendHandlerWithError(s.handleBubbleView)) // view image as speech bubble gif
 	mux.Handle("GET /thumb/{file}", FrontendHandlerWithError(s.handleThumbnailView))
 	mux.Handle("GET /delete/{fileId}/{deleteToken}", HandlerWithError(s.handleDeleteFile))
 
 	// Frontend Routes
+	mux.Handle("GET /", http.RedirectHandler("/app", http.StatusTemporaryRedirect))
 	mux.Handle("GET /app/login", FrontendHandlerWithError(s.handleLoginPage))
 	mux.Handle("POST /app/login", FrontendHandlerWithError(s.handlePostLoginPage))
 	mux.With(s.preHandleAuthentication).With(s.preHandleRequireAuthentication).Handle("GET /app", FrontendHandlerWithError(s.handleDashboardPage))
