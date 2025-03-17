@@ -6,8 +6,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/jmoiron/sqlx"
-	"github.com/liondadev/quick-image-server/types"
 	"image/jpeg"
 	"image/png"
 	"io"
@@ -21,15 +19,13 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/jmoiron/sqlx"
+	"github.com/liondadev/quick-image-server/types"
+
 	"github.com/go-chi/chi/v5"
 )
 
 const FileIdLength = 12
-
-// handleIndex handles requests to GET /
-func (s *Server) handleIndex(w http.ResponseWriter, r *http.Request) error {
-	return PublicError{http.StatusNotFound, "Page not found."}
-}
 
 // handleNotFound is called when no other handlers match the request. In other words, this is called
 // when the page is not found or the route doesn't exist.
@@ -104,6 +100,9 @@ func (s *Server) handleFileUpload(w http.ResponseWriter, r *http.Request) error 
 	}
 
 	deleteUrl, err := url.JoinPath(s.cfg.BasePath, "/delete/", fileId, "/", deleteToken)
+	if err != nil {
+		return err
+	}
 
 	writeJson(w, http.StatusCreated, jMap{ // it was a success!
 		"file_url":      uploadUrl,
@@ -497,4 +496,73 @@ func (s *Server) handleRunImport(w http.ResponseWriter, r *http.Request) {
 	}
 
 	_ = writeNormalMessage(typeSuccess, "Done!")
+}
+
+func (s *Server) handleCaptiveUpload(w http.ResponseWriter, r *http.Request) error {
+	userName, ok := r.Context().Value(AuthenticatedUserContextKey).(string)
+	if !ok {
+		panic("user in middleware but not in context key?")
+	}
+
+	err := r.ParseMultipartForm(1024 * 8)
+	if err != nil {
+		return err
+	}
+
+	uploadedFile, header, err := r.FormFile("upload")
+	if err != nil {
+		return err
+	}
+
+	fileId, err := s.getFreeFileId(FileIdLength)
+	if err != nil {
+		fmt.Println(err)
+		return PublicError{http.StatusInternalServerError, "failed to generate id"}
+	}
+
+	mimeType := header.Header.Get("Content-Type")
+	if mimeType == "" {
+		mimeType = "application/octet-stream" // default for binary data
+	}
+
+	ext := path.Ext(header.Filename)
+	diskName := fileId + ext
+
+	// Handle storing the file
+	fullPath := path.Join(s.cfg.FSPath, diskName)
+	f, err := os.Create(fullPath)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+
+	n, err := io.Copy(f, uploadedFile)
+	if err != nil {
+		return err
+	}
+
+	log.Printf("User '%s' uploaded file (using a captive upload) '%s' (%s), n=%d\n", userName, header.Filename, diskName, n)
+
+	// Handle storing the upload in the database
+	deleteToken := s.generateDeleteToken(32)
+	if _, err := s.db.Exec(`INSERT INTO "uploads" ("id", "mime", "user", "uploaded_at", "uploaded_as", "delete_token", "ext") VALUES ($1, $2, $3, $4, $5, $6, $7)`, fileId, mimeType, userName, time.Now().Unix(), header.Filename, deleteToken, ext); err != nil {
+		// If we fail the database query we need to delete the file
+		f.Close()
+		_ = os.Remove(fullPath) // if we error here it's already too late
+
+		return err
+	}
+
+	// Reutrn the user where they used to be
+	returnTo := r.FormValue("return-to")
+	if returnTo == "" {
+		returnTo = "dashboard"
+	}
+
+	if returnTo == "dashboard" {
+		http.Redirect(w, r, "/app/", http.StatusSeeOther) // StatusSeeOther makes the client do a GET instead of a POST
+	} else { // assume uploads otherwise
+		http.Redirect(w, r, "/app/uploads", http.StatusSeeOther) // StatusSeeOther makes the client do a GET instead of a POST
+	}
+	return nil
 }

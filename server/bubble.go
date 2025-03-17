@@ -5,8 +5,6 @@ import (
 	_ "embed"
 	"errors"
 	"fmt"
-	"github.com/ericpauley/go-quantize/quantize"
-	"github.com/nfnt/resize"
 	"image"
 	"image/color"
 	"image/draw"
@@ -14,6 +12,9 @@ import (
 	"image/jpeg"
 	"image/png"
 	"io"
+
+	"github.com/ericpauley/go-quantize/quantize"
+	"github.com/nfnt/resize"
 )
 
 //go:embed bubble_mask.png
@@ -87,10 +88,23 @@ func (ap AlreadyQuantated) Quantize(_ color.Palette, _ image.Image) color.Palett
 	return ap.palette
 }
 
+type QuantizerWithTransparencyGuarenteed struct {
+	quantize.MedianCutQuantizer
+}
+
+// Quantize takes the normal palette returned by the normal quantizer and ensures it has a transparent
+// color included as well.
+func (q QuantizerWithTransparencyGuarenteed) Quantize(p color.Palette, m image.Image) color.Palette {
+	palette := q.MedianCutQuantizer.Quantize(p, m)
+	palette[0] = color.RGBA{0, 0, 0, 0}
+
+	return palette
+}
+
 // ImageToGif turns an image into a gif.
 func (s *Server) ImageToGif(img image.Image) (io.Reader, error) {
 	buff := bytes.Buffer{}
-	if err := gif.Encode(&buff, img, &gif.Options{Quantizer: quantize.MedianCutQuantizer{}}); err != nil {
+	if err := gif.Encode(&buff, img, &gif.Options{Quantizer: QuantizerWithTransparencyGuarenteed{quantize.MedianCutQuantizer{}}}); err != nil {
 		return nil, nil
 	}
 

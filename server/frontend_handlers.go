@@ -39,7 +39,8 @@ func (h FrontendHandlerWithError) ServeHTTP(w http.ResponseWriter, r *http.Reque
 		}
 
 		log.Printf("Encountered error when serving frontend request for (%s) %s: %s", r.RemoteAddr, r.RequestURI, err.Error())
-		err = writeHTML(w, http.StatusInternalServerError, pages.Error(dur, "500 - Internal Server Error", "Internal Server Error"))
+		_ = writeHTML(w, http.StatusInternalServerError, pages.Error(dur, "500 - Internal Server Error", "Internal Server Error"))
+
 		return
 	}
 }
