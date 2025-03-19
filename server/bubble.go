@@ -4,6 +4,7 @@ import (
 	"bytes"
 	_ "embed"
 	"fmt"
+	"github.com/liondadev/quick-image-server/server/bubble"
 	"image"
 	"image/color"
 	"image/draw"
@@ -13,22 +14,7 @@ import (
 	"io"
 
 	"github.com/ericpauley/go-quantize/quantize"
-	gifdrawer "github.com/liondadev/quick-image-server/server/gifd"
-	"github.com/nfnt/resize"
 )
-
-//go:embed bubble_mask.png
-var bubbleMaskBytes []byte
-var bubbleMaskImg *image.Image
-
-func init() {
-	img, err := png.Decode(bytes.NewReader(bubbleMaskBytes))
-	if err != nil {
-		panic(err)
-	}
-
-	bubbleMaskImg = &img
-}
 
 // normalizeImage takes a normal image.Image and turns into
 // an object that impliments draw.Image by creating an object
@@ -64,32 +50,9 @@ func (s *Server) MakeBubbleImage(mime string, original io.Reader) (image.Image, 
 		return nil, fmt.Errorf("mime type '%s' can't be used to create bubble images", mime)
 	}
 
-	// The PNG image library already implimemts draw.Image on all
-	// the returned images, but the JPEG library doesn't.
+	// Ensure we have a draw.Image, unlike the jpeg library.
 	dst := normalizeImage(src)
-
-	mb := (*bubbleMaskImg).Bounds()
-	mh := mb.Dy()
-
-	b := src.Bounds()
-	w, h := b.Dx(), b.Dy()
-
-	// Resize the bubble mask image to the same size as the image
-	// we're targetting. This allows us to then use mask.At to check the transparency
-	// and do some manual masking.
-	mask := image.NewRGBA(image.Rect(0, 0, w, h))
-	resizedBaskMask := resize.Resize(uint(w), uint(mh), *bubbleMaskImg, resize.Lanczos3)
-	draw.Draw(mask, image.Rect(0, 0, w, mh), resizedBaskMask, image.Point{}, draw.Over)
-
-	for x := range w + 1 {
-		for y := range h + 1 {
-			_, _, _, ma := resizedBaskMask.At(x, y).RGBA()
-			sr, sg, sb, _ := dst.At(x, y).RGBA() // dst has the proper color model
-
-			newCol := color.RGBA{R: uint8(sr), G: uint8(sg), B: uint8(sb), A: 255 - uint8(ma)}
-			dst.Set(x, y, newCol)
-		}
-	}
+	bubble.StdDrawer.Draw(dst, dst.Bounds(), dst, image.Point{})
 
 	return dst, nil
 }
@@ -119,7 +82,7 @@ func (q QuantizerWithTransparencyGuarenteed) Quantize(p color.Palette, m image.I
 // ImageToGif turns an image into a gif.
 func (s *Server) ImageToGif(img image.Image) (io.Reader, error) {
 	buff := bytes.Buffer{}
-	if err := gif.Encode(&buff, img, &gif.Options{Quantizer: QuantizerWithTransparencyGuarenteed{quantize.MedianCutQuantizer{}}, Drawer: gifdrawer.New()}); err != nil {
+	if err := gif.Encode(&buff, img, &gif.Options{Quantizer: QuantizerWithTransparencyGuarenteed{quantize.MedianCutQuantizer{}}, Drawer: bubble.Drawer{Base: draw.FloydSteinberg, Mask: bubble.Mask}}); err != nil {
 		return nil, nil
 	}
 

@@ -91,6 +91,7 @@ func (s *Server) SetupHTTP() error {
 	mux.With(s.preHandleAuthentication).With(s.preHandleRequireAuthentication).Handle("POST /captive-upload", HandlerWithError(s.handleCaptiveUpload))
 
 	// Frontend Routes
+	mux.Handle("POST /", http.RedirectHandler("/app", http.StatusSeeOther))
 	mux.Handle("GET /", http.RedirectHandler("/app", http.StatusTemporaryRedirect))
 	mux.Handle("GET /app/login", FrontendHandlerWithError(s.handleLoginPage))
 	mux.Handle("POST /app/login", FrontendHandlerWithError(s.handlePostLoginPage))

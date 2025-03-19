@@ -214,7 +214,7 @@ func (s *Server) handleBubbleView(w http.ResponseWriter, r *http.Request) error 
 	if err != nil {
 		return err
 	}
-	defer f.Close()
+	defer nf.Close()
 
 	if _, err := io.Copy(nf, enc); err != nil {
 		return err
