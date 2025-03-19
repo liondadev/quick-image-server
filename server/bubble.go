@@ -3,7 +3,6 @@ package server
 import (
 	"bytes"
 	_ "embed"
-	"errors"
 	"fmt"
 	"image"
 	"image/color"
@@ -30,6 +29,19 @@ func init() {
 	bubbleMaskImg = &img
 }
 
+// normalizeImage takes a normal image.Image and turns into
+// an object that impliments draw.Image by creating an object
+// that impliments draw.Image and drawing src over top of it.
+// This is also guarenteed to return an image with rgba values
+// of 0 <= rgba <= 255, unlike the jpeg library for some fucking
+// reason.
+func normalizeImage(img image.Image) draw.Image {
+	drawImg := image.NewRGBA(img.Bounds())                          // create a new image that impliments the draw.Imgage
+	draw.Draw(drawImg, img.Bounds(), img, image.Point{}, draw.Over) // draw the image over the new one
+
+	return drawImg
+}
+
 // MakeBubbleImage creates one of those discord bubble images with the speech bubble over an image.
 func (s *Server) MakeBubbleImage(mime string, original io.Reader) (image.Image, error) {
 	var src image.Image
@@ -51,10 +63,9 @@ func (s *Server) MakeBubbleImage(mime string, original io.Reader) (image.Image, 
 		return nil, fmt.Errorf("mime type '%s' can't be used to create bubble images", mime)
 	}
 
-	dst, ok := src.(draw.Image)
-	if !ok {
-		return nil, errors.New("draw is not assertable to a draw.image")
-	}
+	// The PNG image library already implimemts draw.Image on all
+	// the returned images, but the JPEG library doesn't.
+	dst := normalizeImage(src)
 
 	mb := (*bubbleMaskImg).Bounds()
 	mh := mb.Dy()
@@ -62,15 +73,18 @@ func (s *Server) MakeBubbleImage(mime string, original io.Reader) (image.Image, 
 	b := src.Bounds()
 	w, h := b.Dx(), b.Dy()
 
-	// Create the mask image
+	// Resize the bubble mask image to the same size as the image
+	// we're targetting. This allows us to then use mask.At to check the transparency
+	// and do some manual masking.
 	mask := image.NewRGBA(image.Rect(0, 0, w, h))
 	resizedBaskMask := resize.Resize(uint(w), uint(mh), *bubbleMaskImg, resize.Lanczos3)
 	draw.Draw(mask, image.Rect(0, 0, w, mh), resizedBaskMask, image.Point{}, draw.Over)
 
-	for x := 0; x < w; x++ {
-		for y := 0; y < h; y++ {
+	for x := range w + 1 {
+		for y := range h + 1 {
 			_, _, _, ma := resizedBaskMask.At(x, y).RGBA()
-			sr, sg, sb, _ := src.At(x, y).RGBA()
+			sr, sg, sb, _ := dst.At(x, y).RGBA() // dst has the proper color model
+
 			newCol := color.RGBA{R: uint8(sr), G: uint8(sg), B: uint8(sb), A: 255 - uint8(ma)}
 			dst.Set(x, y, newCol)
 		}
@@ -96,7 +110,7 @@ type QuantizerWithTransparencyGuarenteed struct {
 // color included as well.
 func (q QuantizerWithTransparencyGuarenteed) Quantize(p color.Palette, m image.Image) color.Palette {
 	palette := q.MedianCutQuantizer.Quantize(p, m)
-	palette[0] = color.RGBA{0, 0, 0, 0}
+	palette[0] = color.RGBA{0, 0, 0, 0} // force a transparent palette in there.
 
 	return palette
 }
