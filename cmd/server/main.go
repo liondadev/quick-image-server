@@ -11,8 +11,13 @@ import (
 )
 
 func main() {
+	configPath := "config.json"
+	if path, ok := os.LookupEnv("CONFIG_PATH"); ok {
+		configPath = path
+	}
+
 	// Open & Load Config
-	f, err := os.Open("config.json")
+	f, err := os.Open(configPath)
 	if err != nil {
 		log.Panicf("open config file: %s", err.Error())
 		return

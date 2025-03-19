@@ -57,22 +57,13 @@ func (s *Server) MakeBubbleImage(mime string, original io.Reader) (image.Image, 
 	return dst, nil
 }
 
-// AlreadyQuantated makes the quantize func return the included palette.
-type AlreadyQuantated struct {
-	palette color.Palette
-}
-
-func (ap AlreadyQuantated) Quantize(_ color.Palette, _ image.Image) color.Palette {
-	return ap.palette
-}
-
-type QuantizerWithTransparencyGuarenteed struct {
+type TransparentQuantizer struct {
 	quantize.MedianCutQuantizer
 }
 
 // Quantize takes the normal palette returned by the normal quantizer and ensures it has a transparent
 // color included as well.
-func (q QuantizerWithTransparencyGuarenteed) Quantize(p color.Palette, m image.Image) color.Palette {
+func (q TransparentQuantizer) Quantize(p color.Palette, m image.Image) color.Palette {
 	palette := q.MedianCutQuantizer.Quantize(p, m)
 	palette[0] = color.RGBA{0, 0, 0, 0} // force a transparent palette in there.
 
@@ -82,7 +73,7 @@ func (q QuantizerWithTransparencyGuarenteed) Quantize(p color.Palette, m image.I
 // ImageToGif turns an image into a gif.
 func (s *Server) ImageToGif(img image.Image) (io.Reader, error) {
 	buff := bytes.Buffer{}
-	if err := gif.Encode(&buff, img, &gif.Options{Quantizer: QuantizerWithTransparencyGuarenteed{quantize.MedianCutQuantizer{}}, Drawer: bubble.Drawer{Base: draw.FloydSteinberg, Mask: bubble.Mask}}); err != nil {
+	if err := gif.Encode(&buff, img, &gif.Options{Quantizer: TransparentQuantizer{quantize.MedianCutQuantizer{}}, Drawer: bubble.Drawer{Base: draw.FloydSteinberg, Mask: bubble.Mask}}); err != nil {
 		return nil, nil
 	}
 

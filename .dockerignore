@@ -1,0 +1,6 @@
+store
+tmp
+.air.toml
+.gitignore
+config.json
+qodana.yaml
