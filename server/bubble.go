@@ -13,6 +13,7 @@ import (
 	"io"
 
 	"github.com/ericpauley/go-quantize/quantize"
+	gifdrawer "github.com/liondadev/quick-image-server/server/gifd"
 	"github.com/nfnt/resize"
 )
 
@@ -118,7 +119,7 @@ func (q QuantizerWithTransparencyGuarenteed) Quantize(p color.Palette, m image.I
 // ImageToGif turns an image into a gif.
 func (s *Server) ImageToGif(img image.Image) (io.Reader, error) {
 	buff := bytes.Buffer{}
-	if err := gif.Encode(&buff, img, &gif.Options{Quantizer: QuantizerWithTransparencyGuarenteed{quantize.MedianCutQuantizer{}}}); err != nil {
+	if err := gif.Encode(&buff, img, &gif.Options{Quantizer: QuantizerWithTransparencyGuarenteed{quantize.MedianCutQuantizer{}}, Drawer: gifdrawer.New()}); err != nil {
 		return nil, nil
 	}
 
