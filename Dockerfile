@@ -9,6 +9,11 @@ RUN go mod download
 
 COPY . .
 RUN mkdir /app/bin
+
+# Install templ and build the pages
+RUN go install github.com/a-h/templ/cmd/templ@latest
+RUN templ generate
+
 RUN go build -o /app/bin/build ./cmd/server/main.go
 
 FROM alpine:latest

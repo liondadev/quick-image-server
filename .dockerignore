@@ -4,3 +4,5 @@ tmp
 .gitignore
 config.json
 qodana.yaml
+*.db
+*_templ.go
