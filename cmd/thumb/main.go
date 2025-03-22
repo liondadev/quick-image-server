@@ -2,21 +2,22 @@ package main
 
 import (
 	"fmt"
-	"github.com/liondadev/quick-image-server/server"
 	"io"
 	"os"
+
+	"github.com/liondadev/quick-image-server/server"
 )
 
 func main() {
 	s := server.Server{}
 
-	f, err := os.Open("kvarkar-exposed.png")
+	f, err := os.Open("./thing.jpg")
 	if err != nil {
 		panic(err)
 	}
 	defer f.Close()
 
-	c, err := s.MakeBubbleImage("image/png", f)
+	c, err := s.MakeBubbleImage("image/jpeg", f)
 	if err != nil {
 		panic(err)
 	}

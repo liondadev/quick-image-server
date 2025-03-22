@@ -4,11 +4,12 @@ import (
 	"bytes"
 	_ "embed"
 	"fmt"
-	"github.com/nfnt/resize"
 	"image"
 	"image/color"
 	"image/draw"
 	"image/png"
+
+	"github.com/nfnt/resize"
 )
 
 //go:embed bubble_mask.png
@@ -62,13 +63,14 @@ func (d Drawer) Draw(dst draw.Image, r image.Rectangle, src image.Image, sp imag
 	}
 
 	// Setup our mask
+	maskBounds := d.Mask.Bounds()
+	maskRatio := maskBounds.Dx() / maskBounds.Dy()
 	maskW := r.Dx()
-	maskH := maskW / (maskW / d.Mask.Bounds().Dy())
+	maskH := maskW / maskRatio
+	fmt.Println(maskH)
 	alphaMask := image.NewAlpha(r)
-	resizedMask := resize.Resize(uint(maskW), uint(maskH), d.Mask, resize.Bilinear)
+	resizedMask := resize.Resize(uint(maskW), uint(maskH), d.Mask, resize.Bicubic)
 	draw.Draw(alphaMask, image.Rect(0, 0, maskW, maskH), resizedMask, sp, draw.Src)
-
-	fmt.Println(alphaMask.Bounds(), dst.Bounds())
 
 	// Mask everything out
 	w, h := maskW, maskH
