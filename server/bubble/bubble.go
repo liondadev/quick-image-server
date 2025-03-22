@@ -3,7 +3,6 @@ package bubble
 import (
 	"bytes"
 	_ "embed"
-	"fmt"
 	"image"
 	"image/color"
 	"image/draw"
@@ -67,7 +66,6 @@ func (d Drawer) Draw(dst draw.Image, r image.Rectangle, src image.Image, sp imag
 	maskRatio := maskBounds.Dx() / maskBounds.Dy()
 	maskW := r.Dx()
 	maskH := maskW / maskRatio
-	fmt.Println(maskH)
 	alphaMask := image.NewAlpha(r)
 	resizedMask := resize.Resize(uint(maskW), uint(maskH), d.Mask, resize.Bicubic)
 	draw.Draw(alphaMask, image.Rect(0, 0, maskW, maskH), resizedMask, sp, draw.Src)
