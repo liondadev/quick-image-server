@@ -17,6 +17,7 @@ import (
 	"path/filepath"
 	"slices"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/jmoiron/sqlx"
@@ -133,14 +134,15 @@ func (s *Server) handleFileView(w http.ResponseWriter, r *http.Request) error {
 	}
 	defer f.Close()
 
-	var mimeType string
-	if err := s.db.Get(&mimeType, `SELECT "mime" FROM "uploads" WHERE "id" = $1`, fileId); err != nil {
+	var upload types.Upload
+	if err := s.db.Get(&upload, `SELECT "mime", "uploaded_as" FROM "uploads" WHERE "id" = $1`, fileId); err != nil {
 		// This means the file exists on disk but not in the database??
 		return err
 	}
 
 	setCacheControlHeaders(w)
-	w.Header().Set("Content-Type", mimeType)
+	w.Header().Set("Content-Type", upload.MimeType)
+	w.Header().Set("Content-Disposition", fmt.Sprintf("inline; filename=\"%s\"", strings.ReplaceAll(upload.UploadedAs, "\"", "\\\"")))
 	w.WriteHeader(200)
 
 	if _, err := io.Copy(w, f); err != nil {
@@ -197,7 +199,7 @@ func (s *Server) handleBubbleView(w http.ResponseWriter, r *http.Request) error 
 			return err
 		}
 	case ".jpg", ".jpeg":
-		if err := jpeg.Encode(enc, bubbled, &jpeg.Options{Quality: 100}); err != nil {
+		if err := jpeg.Encode(enc, bubbled, &jpeg.Options{Quality: 75}); err != nil { // 75 quality is good enough for most text
 			return err
 		}
 	case ".gif":

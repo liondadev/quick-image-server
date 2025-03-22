@@ -3,68 +3,65 @@ package pages
 import "github.com/liondadev/quick-image-server/types"
 
 script openPreview(up types.Upload) {
-showImagePreview(up.UploadedAs + " » " + up.id + up.Extension, up.Id, up.Extension, up.MimeType, up.Timestamp,
-up.DeleteToken)
+  showImagePreview(up.UploadedAs + " » " + up.Id + up.Extension, up.Id, up.Extension, up.MimeType, up.Timestamp,
+  up.DeleteToken)
 }
 
 templ FileCard(up types.Upload) {
-<div class="card">
-    <img src={"/thumb/"+up.Id+up.Extension} alt={"Thumbnail for "+up.UploadedAs} class=" card--image">
-    <div class="card--body">
-        <a class="card--body--title" href={ templ.SafeURL("/f/"+up.Id+up.Extension) }>{ up.UploadedAs }</a>
-        <p class="card--body--desc">{ up.Id } | { up.Extension }</p>
-        <button class="sep-top" onclick={ openPreview(up) }>Info</button>
-    </div>
-</div>
+	<div class="card">
+		<img src={ "/thumb/" + up.Id + up.Extension } alt={ "Thumbnail for " + up.UploadedAs } class=" card--image"/>
+		<div class="card--body">
+			<a class="card--body--title" href={ templ.SafeURL("/f/" + up.Id + up.Extension) }>{ up.UploadedAs }</a>
+			<p class="card--body--desc">{ up.Id } | { up.Extension }</p>
+			<button class="sep-top" onclick={ openPreview(up) }>Info</button>
+		</div>
+	</div>
 }
 
 templ Dashboard(username string, stats map[string]string, uploads []types.Upload) {
-@MainLayout("Dashboard", "") {
-<div class="container sep-top">
-    <div class="sep-middle">
-        <h1 class="text-title">Hello, { username }</h1>
-        <div class="nav-links">
-            <a href="/app/uploads">Uploads</a>
-            <span>•</span>
-            <a href="/app/exports">Exports</a>
-            <span>•</span>
-            <a href="/app/logout">Log Out</a>
-        </div>
-    </div>
-
-    <div class="stats-list">
-        for key, val := range stats {
-        <div class="card sep-top">
-            <div class="card--header">{key}</div>
-            <div class="card--body">{val}</div>
-        </div>
-        }
-
-        // This isn't technically a statistic, but it's still cool to
-        // allow people to manually upload things.
-        <div class="card sep-top">
-            <div class="card--header">Upload File</div>
-            <div class="card--body">
-                <form action="/captive-upload" method="POST" enctype="multipart/form-data">
-                    <input type="hidden" name="return-to" value="dashboard"> // know where to reutrn the user to
-                    <input type="file" name="upload">
-                    <button>Upload</button>
-                </form>
-            </div>
-        </div>
-    </div>
-    <div class="card sep-top">
-        <div class="card--header">Activity</div>
-        <div class="card--body upload-grid">
-            for _, up := range uploads {
-            @FileCard(up)
-            }
-        </div>
-    </div>
-</div>
-}
-
-<style>
+	@MainLayout("Dashboard", "") {
+		<div class="container sep-top">
+			<div class="sep-middle">
+				<h1 class="text-title">Hello, { username }</h1>
+				<div class="nav-links">
+					<a href="/app/uploads">Uploads</a>
+					<span>•</span>
+					<a href="/app/exports">Exports</a>
+					<span>•</span>
+					<a href="/app/logout">Log Out</a>
+				</div>
+			</div>
+			<div class="stats-list">
+				for key, val := range stats {
+					<div class="card sep-top">
+						<div class="card--header">{ key }</div>
+						<div class="card--body">{ val }</div>
+					</div>
+				}
+				// This isn't technically a statistic, but it's still cool to
+				// allow people to manually upload things.
+				<div class="card sep-top">
+					<div class="card--header">Upload File</div>
+					<div class="card--body">
+						<form action="/captive-upload" method="POST" enctype="multipart/form-data">
+							<input type="hidden" name="return-to" value="dashboard"/> // know where to reutrn the user to
+							<input type="file" name="upload"/>
+							<button>Upload</button>
+						</form>
+					</div>
+				</div>
+			</div>
+			<div class="card sep-top">
+				<div class="card--header">Activity</div>
+				<div class="card--body upload-grid">
+					for _, up := range uploads {
+						@FileCard(up)
+					}
+				</div>
+			</div>
+		</div>
+	}
+	<style>
     .stats-list {
         display: grid;
         gap: var(--base-padding);
