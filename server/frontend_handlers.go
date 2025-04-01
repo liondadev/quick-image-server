@@ -71,10 +71,12 @@ func (s *Server) handlePostLoginPage(w http.ResponseWriter, r *http.Request) err
 		return writeHTML(w, http.StatusBadRequest, pages.Login("Invalid API Key."))
 	}
 
+	exp := time.Now().Add(time.Hour * 24 * 30)
 	http.SetCookie(w, &http.Cookie{
-		Name:  "qis_api_key",
-		Value: apiKey,
-		Path:  "/",
+		Name:    "qis_api_key",
+		Value:   apiKey,
+		Path:    "/",
+		Expires: exp,
 	})
 
 	http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
